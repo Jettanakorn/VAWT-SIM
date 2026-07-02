@@ -112,4 +112,6 @@ The anon key is client-visible by design in a Supabase setup — the open RLS po
 
 ## License
 
-Not yet specified. Add a `LICENSE` file before external contributors rely on this.
+MIT License — see [`LICENSE`](./LICENSE).
+
+Copyright (c) 2026 Jettanakorn Pengsiri, JFOX Aircraft
