@@ -23,6 +23,8 @@ VAWT-SIM is a **specification and requirements-capture tool**, not a simulation 
 
 The Weibull table is the basis for AEP (annual energy production) estimation downstream — it's stored explicitly rather than just the *k*/*c* pair so the underlying distribution can be audited or re-derived without re-running a wind resource assessment.
 
+**Auto-calculated vs. manual entry.** By default the frequency table is derived live from *k*, *c*, and the height/roughness inputs using the standard two-parameter Weibull distribution with log-law wind shear extrapolation to hub height. If you have your own measured or purchased wind resource data (met mast, MERRA-2, a wind atlas) instead of a clean Weibull fit, switch the table to **Manual edit** mode and type the frequency (%) directly per wind-speed bin — hours/yr recalculates automatically, and power density stays physically derived from wind speed. Switching back to Auto-calculated discards manual edits (with a confirmation prompt). An inline **guide panel** ("What is this? / Guide") explains what *k*, *c*, and each height parameter mean, and when to reach for manual mode.
+
 ### Section 2 — Engineering Design
 
 | Group | Parameters |
@@ -67,10 +69,13 @@ Kept intentionally framework-free — this is a form over a schema, not an appli
 
 ```
 VAWT-SIM/
-├── vawt-spec-app.html       # Spec sheet UI + Supabase client calls
-├── vawt_supabase_setup.sql  # Table DDL, trigger, RLS policy, indexes
+├── index.html                # Spec sheet UI + Supabase client calls (built/bundled single-file app)
+├── vawt_supabase_setup.sql   # Table DDL, trigger, RLS policy, indexes
+├── LICENSE                   # MIT
 └── README.md
 ```
+
+> **Note on `index.html`:** this file is a bundled build output (React + Supabase client inlined into one `<script>` tag), not hand-authored source. There is currently no separate pre-build project checked into this repo — edits to app behavior are made directly against this file. Keep that in mind if you later introduce a real build step; you'll want to reconcile any direct edits back into source first.
 
 ## Setup
 
@@ -85,7 +90,7 @@ Run [`vawt_supabase_setup.sql`](./vawt_supabase_setup.sql) in the Supabase SQL E
 
 ### 2. Point the app at your project
 
-In `vawt-spec-app.html`, replace the placeholder `YOUR_ANON_KEY_HERE` and Supabase project URL with your own project's values (Supabase dashboard → **Settings → API**).
+`index.html` already ships with a Supabase URL and anon key inlined near the bottom of the script. Replace both with your own project's values (Supabase dashboard → **Settings → API**) if you're pointing this at a different backend.
 
 ### 3. Serve it
 
@@ -93,8 +98,9 @@ Static file, no build:
 
 ```bash
 python3 -m http.server 8000
-# → http://localhost:8000/vawt-spec-app.html
+# → http://localhost:8000/index.html
 ```
+or just open `index.html` directly in a browser.
 
 ## Security
 
@@ -107,6 +113,7 @@ The anon key is client-visible by design in a Supabase setup — the open RLS po
 ## Known Limitations
 
 - No input validation against physically implausible values (e.g., Cp > Betz limit of 0.593) — the tool records what's entered, it doesn't check aerodynamic feasibility
+- Manual Weibull entry doesn't validate that per-bin frequencies sum to ~100% — garbage in, garbage out on AEP downstream
 - No versioning/diff view between revisions of the same `doc_id` beyond the `updated_at` timestamp
 - No unit toggling (all fields assume SI units — confirm this matches your team's convention before bulk data entry)
 
